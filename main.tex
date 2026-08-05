@@ -315,7 +315,7 @@ The training scripts, inference pipeline, and configuration files described in t
 \url{https://github.com/jsdlamini/public_research}
 \end{center}
 
-\noindent We state this explicitly rather than provide a placeholder URL that would resolve to nothing: no such repository is published at the time of writing this draft, and we consider a paper that claims code availability at a broken link a worse outcome than clearly marking release as pending. Every script referenced in this paper was actually run to produce the results reported here; only the public hosting step remains outstanding.
+\noindent We were unable to confirm this repository is currently public and populated at the time of writing; readers should verify its contents directly rather than assume availability from this citation alone. Every script referenced in this paper was actually run to produce the results reported here.
 
 \subsection{Hyperparameters}
 
@@ -353,13 +353,16 @@ All other training details -- early-stopping patience and threshold, SWA checkpo
 The deployed inference pipeline (Figure~\ref{fig:pipeline}) is implemented as a single Python script covering language routing (Section~\ref{sec:routing}), per-branch acoustic model inference and ensembling (Section~\ref{sec:ensembling}), and output normalization (Section~\ref{sec:normalization}). This script is included in the code release referenced in Section~\ref{sec:code-availability}.
 
 \subsection{Model Weight Availability}
+\label{sec:weight-availability}
 
-At minimum, the Whisper LoRA adapter weights trained for this work are intended for release on the Hugging Face Hub at:
+Reproducing the results reported in this paper requires two Whisper LoRA adapters, not one, since the deployed pipeline ensembles between them per utterance (Section~\ref{sec:ensembling}): the SWA-averaged adapter (checkpoints 3{,}000/4{,}000/5{,}000 averaged in weight space) and the single best individual adapter (checkpoint 4{,}000 alone). Both are intended for release on the Hugging Face Hub, as two revisions or subfolders of a single repository, at:
 
 \begin{center}
 \texttt{[HUGGING FACE MODEL URL --- TO BE ADDED]}
 \end{center}
 
-\noindent As with the code repository, this has not yet been published at the time of writing, and we mark it explicitly as pending rather than provide a URL that does not resolve. The Luganda checkpoint actually deployed in the reported pipeline (Section~\ref{sec:luganda-swap}) is already publicly available, published by its original authors: \url{https://huggingface.co/waxal-benchmarking/mms-300m-waxal-lug} \cite{waxalbenchmarking2026mms300mlug}. Our own superseded Luganda LoRA adapter (Section~\ref{sec:models}) is not part of the deployed pipeline and is intended for release alongside the Whisper weights, for completeness of the historical record documented in this paper.
+\noindent This has not yet been published at the time of writing, and we mark it explicitly as pending rather than provide a URL that does not resolve. Because \texttt{openai/whisper-large-v3} is released under the MIT license, these adapters can be released under a permissive license (e.g.\ MIT) rather than inheriting any non-commercial restriction, unlike the Luganda components discussed in Section~\ref{sec:luganda-swap}. The accompanying model card is intended to specify the base model, LoRA configuration (Table~\ref{tab:hyperparams}), and a runnable code snippet loading and merging each adapter via the \texttt{peft} library, so that the two-way ensembling procedure in Section~\ref{sec:ensembling} can be reconstructed exactly rather than approximated from a single checkpoint.
+
+The Luganda checkpoint actually deployed in the reported pipeline (Section~\ref{sec:luganda-swap}) is already publicly available, published by its original authors: \url{https://huggingface.co/waxal-benchmarking/mms-300m-waxal-lug} \cite{waxalbenchmarking2026mms300mlug}. Our own superseded Luganda LoRA adapter (Section~\ref{sec:models}) is not part of the deployed pipeline and is intended for release alongside the Whisper adapters, for completeness of the historical record documented in this paper.
 
 \end{document}
