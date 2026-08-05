@@ -250,7 +250,7 @@ The routing failure documented in Section~\ref{sec:routing} illustrates a genera
 
 We note four specific limitations of the reported pipeline, one of which (the first) was substantially addressed during the course of this study, and three of which remain open.
 
-First, our initial Luganda fine-tune's evaluation WER (0.4309 at its best checkpoint) was substantially worse than the 16.9\% WER reported for an MMS-300M model fine-tuned on Luganda in the closely related WAXAL-NET benchmark study \cite{olufemi2026waxalnet}. Unlike the other limitations noted here, this one was addressed rather than left open: Section~\ref{sec:luganda-swap} describes validating their published checkpoint directly against our own held-out data (confirming 30.3\%/16.6\% WER under two normalization conventions, depending on convention) and adopting it in place of our own fine-tune. We note two residual caveats even so: the validation sample was small (34 held-out examples), and, as discussed in Section~\ref{sec:results}, the one real-world evaluation run we have showing this substitution deployed returned an uninformative rather than a confirming result, since language routing on that particular run sent only 2 of 892 utterances to the Luganda branch.
+First, our initial Luganda fine-tune's evaluation WER (0.4309 at its best checkpoint) was substantially worse than the 16.9\% WER reported for an MMS-300M model fine-tuned on Luganda in the closely related WAXAL-NET benchmark study \cite{olufemi2026waxalnet}. Unlike the other limitations noted here, this one was addressed rather than left open: Section~\ref{sec:luganda-swap} describes validating their published checkpoint \cite{waxalbenchmarking2026mms300mlug} directly against our own held-out data (confirming 30.3\%/16.6\% WER under two normalization conventions, depending on convention) and adopting it in place of our own fine-tune. We note two residual caveats even so: the validation sample was small (34 held-out examples), and, as discussed in Section~\ref{sec:results}, the one real-world evaluation run we have showing this substitution deployed returned an uninformative rather than a confirming result, since language routing on that particular run sent only 2 of 892 utterances to the Luganda branch.
 
 Second, the LoRA target-module naming issue noted in Section~\ref{sec:models} for the Whisper output attention projection was identified but not corrected in the reported training run; we report it transparently rather than retroactively describing a configuration that was not actually executed.
 
@@ -302,5 +302,64 @@ Figure~\ref{fig:pipeline} shows the deployed inference pipeline schematically. T
 \caption{Deployed inference pipeline. Solid boxes indicate the Lingala/Shona path (unchanged, two-way ensemble); heavy-bordered boxes indicate the Luganda path (single external checkpoint, no ensembling since Section~\ref{sec:luganda-swap}); dashed boxes indicate language-agnostic stages.}
 \label{fig:pipeline}
 \end{figure}
+
+\section{Reproducibility}
+\label{sec:reproducibility}
+
+\subsection{Code and Configuration Availability}
+\label{sec:code-availability}
+
+The training scripts, inference pipeline, and configuration files described in this paper are intended for release in a public code repository:
+
+\begin{center}
+\texttt{[GITHUB REPOSITORY URL --- TO BE ADDED]}
+\end{center}
+
+\noindent We state this explicitly rather than provide a placeholder URL that would resolve to nothing: no such repository is published at the time of writing this draft, and we consider a paper that claims code availability at a broken link a worse outcome than clearly marking release as pending. Every script referenced in this paper was actually run to produce the results reported here; only the public hosting step remains outstanding.
+
+\subsection{Hyperparameters}
+
+Table~\ref{tab:hyperparams} reports the complete training configuration for both models we trained ourselves, and the configuration used to train the Luganda checkpoint actually deployed (Section~\ref{sec:luganda-swap}), reported from its authors' published model card \cite{waxalbenchmarking2026mms300mlug} rather than a run performed by us, and marked accordingly.
+
+\begin{table}[htbp]
+\centering
+\caption{Complete training hyperparameters. The rightmost column reports the WAXAL-NET authors' own published configuration \cite{waxalbenchmarking2026mms300mlug} for the checkpoint actually deployed (Section~\ref{sec:luganda-swap}), not a run performed by us; included for completeness given this checkpoint's role in the deployed pipeline.}
+\label{tab:hyperparams}
+\begin{tabular}{lccc}
+\toprule
+ & Whisper & Luganda, initial & Luganda, deployed \\
+ & (ours) & (ours, superseded) & (external \cite{waxalbenchmarking2026mms300mlug}) \\
+\midrule
+Base model & whisper-large-v3 & wav2vec2-XLSR (lucio) & mms-300m \\
+Adaptation & QLoRA (4-bit NF4) & LoRA & Full fine-tune \\
+Rank $r$ / $\alpha$ & 64 / 128 & 32 / 64 & --- \\
+Learning rate & 1.5e-5 & 1e-4 & 1e-4 \\
+Batch size (per device) & 8 & 4 & 16 \\
+Gradient accumulation & 2 & 4 & 2 \\
+Effective batch size & 16 & 16 & 32 \\
+Optimizer & AdamW (8-bit) & AdamW (8-bit) & AdamW (fused) \\
+LR scheduler & Cosine & Cosine & Linear \\
+Warmup steps & 1{,}000 & 500 & 500 \\
+Training budget & 8{,}000 steps (max) & 5{,}000 steps (max) & 30 epochs \\
+Seed & 42 & 42 & 42 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All other training details -- early-stopping patience and threshold, SWA checkpoint selection, and CTC/Seq2Seq-specific settings -- are reported in Section~\ref{sec:training}.
+
+\subsection{Inference Pipeline}
+
+The deployed inference pipeline (Figure~\ref{fig:pipeline}) is implemented as a single Python script covering language routing (Section~\ref{sec:routing}), per-branch acoustic model inference and ensembling (Section~\ref{sec:ensembling}), and output normalization (Section~\ref{sec:normalization}). This script is included in the code release referenced in Section~\ref{sec:code-availability}.
+
+\subsection{Model Weight Availability}
+
+At minimum, the Whisper LoRA adapter weights trained for this work are intended for release on the Hugging Face Hub at:
+
+\begin{center}
+\texttt{[HUGGING FACE MODEL URL --- TO BE ADDED]}
+\end{center}
+
+\noindent As with the code repository, this has not yet been published at the time of writing, and we mark it explicitly as pending rather than provide a URL that does not resolve. The Luganda checkpoint actually deployed in the reported pipeline (Section~\ref{sec:luganda-swap}) is already publicly available, published by its original authors: \url{https://huggingface.co/waxal-benchmarking/mms-300m-waxal-lug} \cite{waxalbenchmarking2026mms300mlug}. Our own superseded Luganda LoRA adapter (Section~\ref{sec:models}) is not part of the deployed pipeline and is intended for release alongside the Whisper weights, for completeness of the historical record documented in this paper.
 
 \end{document}
