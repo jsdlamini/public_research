@@ -14,10 +14,7 @@
 African Language ASR: A Case Study on Lingala, Shona,\\
 and Luganda Using the WAXAL Corpus}
 
-% NOTE TO AUTHOR: Placeholder only -- fill in real name(s), affiliation(s),
-% and contact email(s) before submission. I have no verified information
-% about your identity or institutional affiliation and will not invent one.
-\author{[Author Name]\thanks{[Affiliation]. Email: \texttt{[email]}}}
+\author{Johnson Dlamini\thanks{University of Eswatini (UNESWA). Email: \texttt{jsdlamini@uneswa.ac.sz}}}
 
 \date{}
 
@@ -92,20 +89,20 @@ Figure~\ref{fig:expflow} summarises the iterative procedure applied to every can
 \centering
 \begin{tikzpicture}[
   box/.style={draw, rounded corners, text width=3.0cm, minimum height=1.0cm, align=center, font=\normalfont},
-  procstep/.style={box, fill=blue!8},
-  decision/.style={box, fill=gray!10},
-  rejectbox/.style={box, fill=orange!10, text width=2.6cm},
-  acceptbox/.style={box, fill=teal!12},
+  procstep/.style={box},
+  decision/.style={box, dashed},
+  rejectbox/.style={box, text width=2.6cm},
+  acceptbox/.style={box, very thick},
   arr/.style={-Latex, thin}
 ]
-\node[procstep] (hyp) at (0,9) {Formulate candidate change};
-\node[procstep] (impl) at (0,7.6) {Implement in isolation};
-\node[decision] (localval) at (0,6.2) {Local validation possible?};
-\node[rejectbox] (rejectpre) at (-4,6.2) {Reject pre-evaluation};
-\node[acceptbox] (submit) at (0,4.7) {Evaluate as single-variable A/B test};
-\node[decision] (lbcheck) at (0,3.2) {Held-out score improves?};
-\node[rejectbox] (revert) at (-4,3.2) {Revert; document as negative result};
-\node[acceptbox] (adopt) at (0,1.7) {Adopt into pipeline};
+\node[procstep] (hyp) at (0,12) {Formulate candidate change};
+\node[procstep] (impl) at (0,9.5) {Implement in isolation};
+\node[decision] (localval) at (0,7.0) {Local validation possible?};
+\node[rejectbox] (rejectpre) at (-4,7.0) {Reject pre-evaluation};
+\node[acceptbox] (submit) at (0,4.5) {Evaluate as single-variable A/B test};
+\node[decision] (lbcheck) at (0,2.0) {Held-out score improves?};
+\node[rejectbox] (revert) at (-4,2.0) {Revert; document as negative result};
+\node[acceptbox] (adopt) at (0,-0.5) {Adopt into pipeline};
 
 \draw[arr] (hyp) -- (impl);
 \draw[arr] (impl) -- (localval);
@@ -115,7 +112,7 @@ Figure~\ref{fig:expflow} summarises the iterative procedure applied to every can
 \draw[arr] (lbcheck) -- node[above]{no} (revert);
 \draw[arr] (lbcheck) -- node[right]{yes} (adopt);
 \end{tikzpicture}
-\caption{Experimental methodology applied to every intervention reported in this study. Grey indicates a decision point; blue indicates a process step; orange indicates a rejected or reverted outcome; teal indicates an adopted outcome. Both rejection paths (pre-evaluation and post-evaluation) are treated as reportable negative results rather than discarded.}
+\caption{Experimental methodology applied to every intervention reported in this study. Solid boxes indicate process steps; dashed boxes indicate decision points; heavy-bordered boxes indicate adopted outcomes. Both rejection paths (pre-evaluation and post-evaluation) are treated as reportable negative results rather than discarded.}
 \label{fig:expflow}
 \end{figure}
 
@@ -263,19 +260,19 @@ Figure~\ref{fig:pipeline} shows the deployed inference pipeline schematically: r
 \begin{tikzpicture}[
   node distance=12mm and 8mm,
   box/.style={draw, rounded corners, minimum width=3.6cm, minimum height=1.1cm, align=center, font=\normalfont},
-  gray/.style={box, fill=gray!12},
-  teal/.style={box, fill=teal!12},
-  coral/.style={box, fill=orange!12},
+  agnostic/.style={box, dashed},
+  patha/.style={box},
+  pathb/.style={box, very thick},
   arr/.style={-Latex, thin}
 ]
-\node[gray] (input) {Audio input\\16kHz mono wav, n=892};
-\node[gray, below=of input] (routing) {MMS-LID-256 routing\\97.2\% accuracy, 3-way};
-\node[teal, below left=14mm and 6mm of routing] (whisper) {Whisper-large-v3 QLoRA\\Lingala + Shona};
-\node[coral, below right=14mm and 6mm of routing] (w2v) {wav2vec2-XLSR-53 LoRA\\Luganda};
-\node[teal, below=of whisper] (ens1) {SWA + best checkpoint\\Confidence-selected};
-\node[coral, below=of w2v] (ens2) {SWA + best checkpoint\\Confidence-selected};
-\node[gray, below right=14mm and 0mm of ens1, xshift=18mm] (norm) {Text normalization\\Lowercase-only, jiwer-aligned};
-\node[gray, below=of norm] (out) {Output CSV\\892 predictions};
+\node[agnostic] (input) {Audio input\\16kHz mono wav, n=892};
+\node[agnostic, below=of input] (routing) {MMS-LID-256 routing\\97.2\% accuracy, 3-way};
+\node[patha, below left=14mm and 6mm of routing] (whisper) {Whisper-large-v3 QLoRA\\Lingala + Shona};
+\node[pathb, below right=14mm and 6mm of routing] (w2v) {wav2vec2-XLSR-53 LoRA\\Luganda};
+\node[patha, below=of whisper] (ens1) {SWA + best checkpoint\\Confidence-selected};
+\node[pathb, below=of w2v] (ens2) {SWA + best checkpoint\\Confidence-selected};
+\node[agnostic, below right=14mm and 0mm of ens1, xshift=18mm] (norm) {Text normalization\\Lowercase-only, jiwer-aligned};
+\node[agnostic, below=of norm] (out) {Output CSV\\892 predictions};
 
 \draw[arr] (input) -- (routing);
 \draw[arr] (routing) -- (whisper);
@@ -286,7 +283,7 @@ Figure~\ref{fig:pipeline} shows the deployed inference pipeline schematically: r
 \draw[arr] (ens2) -- (norm);
 \draw[arr] (norm) -- (out);
 \end{tikzpicture}
-\caption{Deployed inference pipeline. Teal indicates the Lingala/Shona path, orange indicates the Luganda path, grey indicates language-agnostic stages.}
+\caption{Deployed inference pipeline. Solid boxes indicate the Lingala/Shona path; heavy-bordered boxes indicate the Luganda path; dashed boxes indicate language-agnostic stages.}
 \label{fig:pipeline}
 \end{figure}
 
